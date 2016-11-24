@@ -84,7 +84,7 @@ func runWorker(inputQueue <-chan string, messages chan<- string, done chan<- str
 		select {
 		case testName := <-inputQueue:
 			test := NewTeamCityTest(testName)
-			messages <- fmt.Sprintf("%s", test.FormatStartNotice())
+			//messages <- fmt.Sprintf("%s", test.FormatStartNotice())
 			runTest(test, binaryName)
 			messages <- test.FormatTestOutput()
 			done <- struct{}{}
