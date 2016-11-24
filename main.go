@@ -51,10 +51,11 @@ func main() {
 	}
 
 	testQueue := make(chan string)
+	messages := make(chan string)
 	completed := make(chan struct{})
 
 	for i := 0; i < *parallelism; i++ {
-		go runWorker(testQueue, completed, *testBinary)
+		go runWorker(testQueue, messages, completed, *testBinary)
 	}
 
 	go func() {
@@ -66,6 +67,8 @@ func main() {
 	resultsCount := 0
 	for {
 		select {
+		case message := <-messages:
+			fmt.Printf("%s", message)
 		case <-completed:
 			resultsCount++
 		}
@@ -76,14 +79,14 @@ func main() {
 	}
 }
 
-func runWorker(inputQueue <-chan string, done chan<- struct{}, binaryName string) {
+func runWorker(inputQueue <-chan string, messages chan<- string, done chan<- struct{}, binaryName string) {
 	for {
 		select {
 		case testName := <-inputQueue:
 			test := NewTeamCityTest(testName)
-			fmt.Printf("%s", test.FormatStartNotice())
+			messages <- fmt.Sprintf("%s", test.FormatStartNotice())
 			runTest(test, binaryName)
-			fmt.Printf("%s", test.FormatTestOutput())
+			messages <- test.FormatTestOutput()
 			done <- struct{}{}
 		}
 	}
