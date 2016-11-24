@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 func usage() string {
@@ -26,6 +27,11 @@ func main() {
 
 	if testBinary == nil || *testBinary == "" {
 		fmt.Fprint(os.Stderr, usage())
+		os.Exit(1)
+	}
+
+	if _, err := os.Stat(*testBinary); err != nil {
+		fmt.Fprintf(os.Stderr, "Cannot find binary: %s\n", *testBinary)
 		os.Exit(1)
 	}
 
@@ -95,6 +101,8 @@ func runWorker(inputQueue <-chan string, messages chan<- string, done chan<- str
 func runTest(test *TeamCityTest, binaryName string) {
 	var out bytes.Buffer
 	var errOut bytes.Buffer
+
+	test.Started = time.Now()
 
 	cmd := exec.Command(binaryName, "-test.v", "-test.run", fmt.Sprintf("^%s$", test.Name))
 	cmd.Stdout = &out

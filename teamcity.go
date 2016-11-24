@@ -30,6 +30,7 @@ var (
 type TeamCityTest struct {
 	Name, Output, ErrOutput, Duration string
 	Race, Fail, Skip, Pass            bool
+	Started time.Time
 }
 
 func NewTeamCityTest(testName string) *TeamCityTest {
@@ -63,14 +64,12 @@ func (test *TeamCityTest) ParseTestRunnerOutput(testOutput string, errOutput str
 	test.ErrOutput = errOutput
 }
 
-func (test *TeamCityTest) FormatStartNotice() string {
-	return fmt.Sprintf(TeamCityTestStarted, time.Now().Format(TeamCityTimestampFormat), test.Name)
-}
-
 func (test *TeamCityTest) FormatTestOutput() string {
 	now := time.Now().Format(TeamCityTimestampFormat)
 
 	var output bytes.Buffer
+
+	output.WriteString(fmt.Sprintf(TeamCityTestStarted, test.Started.Format(TeamCityTimestampFormat), test.Name))
 
 	output.WriteString(fmt.Sprintf(TeamCityTestStdOut, test.Name, escapeOutput(test.Output)))
 	output.WriteString(fmt.Sprintf(TeamCityTestStdErr, test.Name, escapeOutput(test.ErrOutput)))
