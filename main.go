@@ -14,7 +14,7 @@ import (
 
 func usage() string {
 	return `Usage:
-	teamcity-go-test -test <binary> [-parallelism n]
+	teamcity-go-test -test <binary> [-parallelism n] [-timeout t]
 
 	Test names must be listed one per line on stdin.
 `
@@ -23,6 +23,7 @@ func usage() string {
 func main() {
 	testBinary := flag.String("test", "", "executable containing the tests to run")
 	parallelism := flag.Int("parallelism", 1, "number of tests to execute in parallel")
+	timeout := flag.String("timeout", "", "an optional per-test timeout")
 	flag.Parse()
 
 	if testBinary == nil || *testBinary == "" {
@@ -61,7 +62,7 @@ func main() {
 	completed := make(chan struct{})
 
 	for i := 0; i < *parallelism; i++ {
-		go runWorker(testQueue, messages, completed, *testBinary)
+		go runWorker(testQueue, messages, completed, *testBinary, *timeout)
 	}
 
 	go func() {
@@ -85,26 +86,36 @@ func main() {
 	}
 }
 
-func runWorker(inputQueue <-chan string, messages chan<- string, done chan<- struct{}, binaryName string) {
+func runWorker(inputQueue <-chan string, messages chan<- string, done chan<- struct{}, binaryName, timeout string) {
 	for {
 		select {
 		case testName := <-inputQueue:
 			test := NewTeamCityTest(testName)
 			//messages <- fmt.Sprintf("%s", test.FormatStartNotice())
-			runTest(test, binaryName)
+			runTest(test, binaryName, timeout)
 			messages <- test.FormatTestOutput()
 			done <- struct{}{}
 		}
 	}
 }
 
-func runTest(test *TeamCityTest, binaryName string) {
+func runTest(test *TeamCityTest, binaryName, timeout string) {
 	var out bytes.Buffer
 	var errOut bytes.Buffer
 
 	test.Started = time.Now()
 
-	cmd := exec.Command(binaryName, "-test.v", "-test.run", fmt.Sprintf("^%s$", test.Name))
+	args := []string{
+		"-test.v",
+		"-test.run",
+		fmt.Sprintf("^%s$", test.Name),
+	}
+	if timeout != "" {
+		args = append(args, "-test.timeout")
+		args = append(args, timeout)
+	}
+
+	cmd := exec.Command(binaryName, args...)
 	cmd.Stdout = &out
 	cmd.Stderr = &errOut
 	// Not sure what to do with errors here other than report them out to the runner.
