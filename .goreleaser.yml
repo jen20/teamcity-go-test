@@ -1,0 +1,22 @@
+before:
+  hooks:
+    - go mod download
+builds:
+- env:
+  - CGO_ENABLED=0
+  - GO111MODULE=on
+  goos:
+    - darwin
+    - windows
+    - linux
+    - freebsd
+    - solaris
+  goarch:
+    - amd64
+archives:
+- name_template: "{{ .Binary }}-{{ .Tag }}-{{ .Os }}-{{ .Arch }}"
+  format_overrides:
+    - goos: windows
+      format: zip
+changelog:
+  skip: true
