@@ -3,3 +3,4 @@ teamcity-go-test
 .idea
 *.iml
 tests
+dist/

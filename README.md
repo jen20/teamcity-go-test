@@ -1,4 +1,4 @@
-#TeamCity Go Test Runner
+# TeamCity Go Test Runner
 
 `teamcity-go-test` is a replacement test runner for TeamCity for Go. It is
 heavily inspired by [Pavel Gulbin's work][1] <other repo>, but modified to fit
