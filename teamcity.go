@@ -104,6 +104,7 @@ func (test *TeamCityTest) FormatTestOutput() string {
 
 func escapeOutput(outputLines string) string {
 	newOutput := strings.Replace(outputLines, "|", "||", -1)
+	newOutput = strings.Replace(newOutput, "\r", "|r", -1)
 	newOutput = strings.Replace(newOutput, "\n", "|n", -1)
 	newOutput = strings.Replace(newOutput, "'", "|'", -1)
 	newOutput = strings.Replace(newOutput, "]", "|]", -1)
